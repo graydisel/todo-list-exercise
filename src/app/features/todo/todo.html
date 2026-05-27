@@ -1,1 +1,67 @@
-<p>todo works!</p>
+<div class="todos-container">
+  <h2>To Do List</h2>
+
+  <form
+    [formGroup]="todoForm"
+    (ngSubmit)="onAddTodo()"
+    class="todo-add-form"
+  >
+    <div class="input-group">
+      <input type="text" formControlName="title" placeholder="What will we do today?">
+
+      <select formControlName="priority">
+        <option value="low">Low priority</option>
+        <option value="medium">Middle priority</option>
+        <option value="high">High priority</option>
+      </select>
+
+      <button class="btn-add" type="submit" [disabled]="todoForm.invalid">Add</button>
+    </div>
+
+    @if (todoForm.get('title')?.touched && todoForm.get('title')?.invalid) {
+      <div class="error-msg">
+        @if (todoForm.get('title')?.errors?.['required']) {
+          <small>Field can't be empty.</small>
+        }
+        @if (todoForm.get('title')?.errors?.['minlength']) {
+          <small>3 characters minimum required</small>
+        }
+      </div>
+    }
+  </form>
+
+  @if (isLoading()) {
+    <div class="loader">List is loading...</div>
+  } @else {
+    <div class="todos-list">
+
+      @for (todo of todos(); track todo.id) {
+        <div class="todo-item" [class.completed] = "todo.completed">
+
+          <div class="todo-content">
+            <input type="checkbox"
+                   [checked]="todo.completed"
+                   (change)="onToggleStatus(todo.id, todo.completed)"
+            >
+            <span class="todo-title">{{todo.title}}</span>
+
+            <div class="todo-actions">
+              <span class="priority-badge {{ todo.priority }}">{{todo.priority}}</span>
+              <button class="todo-btn-delete"
+                      (click)="onDeleteTodo(todo.id)">
+                Delete
+              </button>
+            </div>
+
+
+          </div>
+
+        </div>
+      } @empty {
+        <div class="todo-empty">
+          The list is empty.
+        </div>
+      }
+    </div>
+  }
+</div>

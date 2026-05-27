@@ -1,5 +1,5 @@
 import {Injectable, signal} from '@angular/core';
-import {IAppTodo, IServerTodo} from '../models/todo.model';
+import {IAppTodo, IServerTodo, TodoPriority} from '../models/todo.model';
 
 @Injectable({
   providedIn: 'root',
@@ -28,6 +28,73 @@ export class TodoService {
       console.error(e);
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  async addTodo (title: string, priority: TodoPriority) {
+    try {
+      const response = await fetch('https://jsonplaceholder.typicode.com/todos', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: title,
+          userId: 1,
+          completed: false
+        }),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8'
+        }
+      });
+
+      if (response.ok) {
+        const serverResult = await response.json();
+
+        const newTodo: IAppTodo = {
+          id: Date.now(),
+          title: title,
+          completed: false,
+          priority: priority,
+        }
+
+        this.todos.update(currentTodos => [newTodo, ...currentTodos])
+      }
+    } catch (e) {
+      console.error('Error while add todo', e);
+    }
+  }
+
+  async toggleTodoStatus (id: number, currentStatus: boolean) {
+    try {
+      const response = await fetch(`https://jsonplaceholder.typicode.com/todos/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          completed: !currentStatus
+        }),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8'
+        },
+      });
+
+      if (response.ok) {
+        this.todos.update(currenTodos => currenTodos.map(todo =>
+          todo.id === id ? {...todo, completed: !currentStatus} : todo
+        ));
+      }
+    } catch (e) {
+      console.error('Error while updating status', e);
+    }
+  }
+
+  async deleteTodo (id: number) {
+    try {
+      const response = await fetch(`https://jsonplaceholder.typicode.com/todos/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        this.todos.update(currentTodos => currentTodos.filter(todo => todo.id !== id))
+      }
+    } catch (e) {
+      console.error('Error while deleting todo', e);
     }
   }
 }
