@@ -7,6 +7,8 @@ export interface IServerTodo {
 
 export type TodoPriority = 'high' | 'medium' | 'low';
 
+export type SortType = 'none' | 'priority-asc' | 'priority-desc';
+
 export interface IAppTodo {
   id: number;
   title: string;

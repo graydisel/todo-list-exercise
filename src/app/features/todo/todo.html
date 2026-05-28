@@ -2,12 +2,12 @@
   <h2>To Do List</h2>
 
   <form
-    [formGroup]="todoForm"
     (ngSubmit)="onAddTodo()"
+    [formGroup]="todoForm"
     class="todo-add-form"
   >
     <div class="input-group">
-      <input type="text" formControlName="title" placeholder="What will we do today?">
+      <input formControlName="title" placeholder="What will we do today?" type="text">
 
       <select formControlName="priority">
         <option value="low">Low priority</option>
@@ -15,7 +15,7 @@
         <option value="high">High priority</option>
       </select>
 
-      <button class="btn-add" type="submit" [disabled]="todoForm.invalid">Add</button>
+      <button [disabled]="todoForm.invalid" class="btn-add" type="submit">Add</button>
     </div>
 
     @if (todoForm.get('title')?.touched && todoForm.get('title')?.invalid) {
@@ -30,35 +30,88 @@
     }
   </form>
 
+  <div class="toolbar">
+    <div class="filter-buttons">
+      <button
+        (click)="changeFilter('all')"
+        [class.active]="currentFilter() === 'all'">All
+      </button>
+      <button
+        (click)="changeFilter('active')"
+        [class.active]="currentFilter() === 'active'">Active
+      </button>
+      <button
+        (click)="changeFilter('completed')"
+        [class.active]="currentFilter() === 'completed'">Completed
+      </button>
+    </div>
+
+    <div class="sort-control">
+      <label for="sortSelect">Sort: </label>
+      <select (change)="changeSort($event)" id="sortSelect">
+        <option value="none">Default</option>
+        <option value="priority-desc">First High</option>
+        <option value="priority-asc">First Low</option>
+      </select>
+    </div>
+  </div>
+
   @if (isLoading()) {
     <div class="loader">List is loading...</div>
   } @else {
     <div class="todos-list">
 
-      @for (todo of todos(); track todo.id) {
-        <div class="todo-item" [class.completed] = "todo.completed">
+      @for (todo of filteredTodos(); track todo.id) {
+        <div class="todo-item" [class.completed]="todo.completed">
 
           <div class="todo-content">
-            <input type="checkbox"
-                   [checked]="todo.completed"
-                   (change)="onToggleStatus(todo.id, todo.completed)"
+            <input
+              type="checkbox"
+              [checked]="todo.completed"
+              (change)="onToggleStatus(todo.id, todo.completed)"
+              [disabled]="editingTodoId === todo.id"
             >
-            <span class="todo-title">{{todo.title}}</span>
 
-            <div class="todo-actions">
-              <span class="priority-badge {{ todo.priority }}">{{todo.priority}}</span>
-              <button class="todo-btn-delete"
-                      (click)="onDeleteTodo(todo.id)">
-                Delete
-              </button>
-            </div>
+            @if (editingTodoId === todo.id) {
+              <div class="edit-mode-container" [formGroup]="editForm">
+                <input
+                  type="text"
+                  class="input-edit-inline"
+                  formControlName="title"
+                >
 
+                <select formControlName="priority">
+                  <option value="low">Low priority</option>
+                  <option value="medium">Middle priority</option>
+                  <option value="high">High priority</option>
+                </select>
 
+                <button class="btn-save-inline" [disabled]="editForm.invalid" (click)="onSaveEdit(todo.id)">✔
+                </button>
+                <button class="btn-cancel-inline" (click)="cancelEdit()">✖</button>
+              </div>
+            } @else {
+              <span class="todo-title" (dblclick)="startEdit(todo.id, todo.title, todo.priority)">
+                {{ todo.title }}
+              </span>
+            }
+          </div>
+
+          <div class="todo-actions">
+            <span class="priority-badge {{ todo.priority }}">
+              {{ todo.priority }}
+            </span>
+
+            @if (editingTodoId !== todo.id) {
+              <button class="btn-edit" (click)="startEdit(todo.id, todo.title, todo.priority)">Edit</button>
+            }
+
+            <button class="btn-delete" (click)="onDeleteTodo(todo.id)">Delete</button>
           </div>
 
         </div>
       } @empty {
-        <div class="todo-empty">
+        <div class="empty-text">
           The list is empty.
         </div>
       }

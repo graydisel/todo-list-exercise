@@ -84,6 +84,27 @@ export class TodoService {
     }
   }
 
+  async updateTodo (id: number, newTitle: string, newPriority: TodoPriority) {
+    try {
+      const response = await fetch(`https://jsonplaceholder.typicode.com/todos/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          title: newTitle
+        }),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8'
+        }
+      });
+
+      if (response.ok) {
+        this.todos.update(currentTodos =>
+          currentTodos.map(todo => todo.id === id ? {...todo, title: newTitle, priority: newPriority} : todo));
+      }
+    } catch (e) {
+      console.error('Error while updating newTitle', e);
+    }
+  }
+
   async deleteTodo (id: number) {
     try {
       const response = await fetch(`https://jsonplaceholder.typicode.com/todos/${id}`, {
